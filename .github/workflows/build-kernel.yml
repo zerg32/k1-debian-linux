@@ -1,0 +1,63 @@
+name: Build Linux Kernel for MIPS
+
+on:
+  push:
+    branches: [ main, master, anti-freezes-method ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Install build dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential bc bison flex libssl-dev make libc6-dev libncurses5-dev
+
+    - name: Download and extract Bootlin toolchain
+      run: |
+        set -euo pipefail
+        wget https://toolchains.bootlin.com/downloads/releases/toolchains/mips32r5el/tarballs/mips32r5el--glibc--bleeding-edge-2025.08-1.tar.bz2
+        tar xf mips32r5el--glibc--bleeding-edge-2025.08-1.tar.bz2
+        echo "${PWD}/mips32r5el--glibc--bleeding-edge-2025.08-1/bin" >> $GITHUB_PATH
+
+    - name: Build Linux kernel
+      run: |
+        set -euo pipefail
+        export ARCH=mips
+        export CROSS_COMPILE=mipsel-linux-
+        
+        # Build the kernel
+        make -j$(nproc)
+        make -j$(nproc) uImage
+        
+        # Build modules
+        make -j$(nproc) modules
+
+    - name: Package kernel and modules
+      run: |
+        set -euo pipefail
+        mkdir -p artifacts
+        cp arch/mips/boot/uImage artifacts/
+        
+        # Package modules
+        make INSTALL_MOD_PATH=./modules modules_install
+        cd modules
+        tar -czf ../artifacts/modules-$(make kernelrelease).tar.gz lib/modules/*
+        cd ..
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: kernel-artifacts
+        path: |
+          artifacts/uImage
+          artifacts/modules-*.tar.gz
+        retention-days: 7
