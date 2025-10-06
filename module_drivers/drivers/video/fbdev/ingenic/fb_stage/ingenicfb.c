@@ -878,9 +878,10 @@ static int ingenicfb_do_resume(struct ingenicfb_device *fbdev)
 {
 	struct dpu_ctrl *dctrl = &fbdev->dctrl;
 	int ret = 0;
-
-	ret = dpu_ctrl_resume(dctrl);
-	dctrl->blank = 0;
+	if (dctrl->blank) {
+		ret = dpu_ctrl_resume(dctrl);
+		dctrl->blank = 0;
+	}
 	return ret;
 }
 
@@ -888,10 +889,10 @@ static int ingenicfb_do_suspend(struct ingenicfb_device *fbdev)
 {
 	struct dpu_ctrl *dctrl = &fbdev->dctrl;
 	int ret = 0;
-
-	ret = dpu_ctrl_suspend(dctrl);
-	dctrl->blank = 1;
-
+	if (!dctrl->blank) {
+		ret = dpu_ctrl_suspend(dctrl);
+		dctrl->blank = 1;
+	}
 	return ret;
 }
 
