@@ -1492,16 +1492,22 @@ static int dpu_comp_framedesc_setup(struct dpu_ctrl *dctrl, struct comp_setup_in
 	return 0;
 }
 #ifdef CONFIG_MMU_NOTIFIER
+#include "hw_composer.h"
+extern struct hw_composer_master *hw_comp_master;
+
 static int dpu_dmmu_mm_release(void *data)
 {
 	struct dpu_ctrl *dctrl = (struct dpu_ctrl *)data;
 	struct comp_setup_info setup_info;
-	// TODO: add lock.
 
 	struct ingenicfb_frm_cfg *frm_cfg = NULL;
 	struct ingenicfb_lay_cfg *lay_cfg = NULL;
 	int j = 0;
-	/*关闭所有的使用TLB的Layer.*/
+
+	if (unlikely(!hw_comp_master))
+		return 0;
+
+	mutex_lock(&hw_comp_master->lock);
 
 	memcpy(&setup_info, &dctrl->comp_info, sizeof(struct comp_setup_info));
 
@@ -1521,6 +1527,8 @@ static int dpu_dmmu_mm_release(void *data)
 
 	dpu_ctrl_comp_setup(dctrl, &setup_info);
 	dpu_ctrl_comp_start(dctrl, 0);
+
+	mutex_unlock(&hw_comp_master->lock);
 
 	return 0;
 
