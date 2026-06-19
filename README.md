@@ -20,6 +20,9 @@ make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE INSTALL_MOD_PATH=~/work/mips-x2000e
 ## Адреса загрузки ядра через uBoot
 
 ```bash
+В меню Tera Term
+File → Transfer → YMODEM → Send
+
 loady 0x80f00000
 bootm 0x80f00000
 ```
@@ -28,34 +31,28 @@ bootm 0x80f00000
 
 ```bash
 tar -czf modules-6.6.18+.tar.gz 6.6.18+
-sudo tar -xzf modules-6.6.18+.tar.gz -C /lib/modules/
+```
 
+```bash
+sudo rm -rf /lib/modules/6.6.18+
+sudo tar -xvf modules.tar.gz -C /lib/modules/
 sudo depmod -a $(uname -r)
 ```
 
 ## Бэкап ядра
 
 ```bash
-sudo dd if=/home/printer/uImage.bin of=/dev/mmcblk0p3
+sudo dd if=/home/printer/uImage of=/dev/mmcblk0p3
 ```
 
 ## Запись ядра
 
-Заполняем раздел p3 нулями
-
-```bash
-sudo dd if=/dev/zero of=/dev/mmcblk0p3 bs=4K
-```
-
-Записываем новый образ поверх нулей
-
-```bash
-sudo dd if=/home/printer/uImage.gz of=/dev/mmcblk0p3
-```
-
+Заполняем раздел p3 нулями и записываем новый образ поверх нулей.
 Синхронизация!
 
 ```bash
+sudo dd if=/dev/zero of=/dev/mmcblk0p3 bs=4K
+sudo dd if=/home/printer/uImage of=/dev/mmcblk0p3
 sync
 ```
 

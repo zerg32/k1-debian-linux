@@ -2399,4 +2399,3 @@ static void ingenic_dsi_worker(struct work_struct *work)
 		atomic_set(&dsi->need_recovery, 0);
 	}
 }
-

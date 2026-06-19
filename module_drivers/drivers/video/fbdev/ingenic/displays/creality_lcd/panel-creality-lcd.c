@@ -192,20 +192,26 @@ static struct lcd_panel_ops panel_ops = {
 
 static struct fb_videomode panel_modes[] = {
 	[0] = {
-		.name                   = "480x800",
-		.refresh                = 30,
-		.xres                   = 480,
-		.yres                   = 800,
-		.pixclock               = 0,
-		.left_margin            = 10,
-		.right_margin           = 10,
-		.upper_margin           = 20,
-		.lower_margin           = 20,
-		.hsync_len              = 20,
-		.vsync_len              = 4,
-		.sync                   = FB_SYNC_HOR_HIGH_ACT & FB_SYNC_VERT_HIGH_ACT,
-		.vmode                  = FB_VMODE_NONINTERLACED,
-		.flag                   = 0,
+		.name           = "480x800",
+		.refresh        = 45,
+		.xres           = 480,
+		.yres           = 800,
+		
+		.pixclock       = 0,
+		
+		.left_margin    = 15,
+		.right_margin   = 15,
+		.hsync_len      = 20,
+		
+		.upper_margin   = 16,
+		.lower_margin   = 16,
+		
+		.vsync_len      = 8,
+		
+		.sync           = FB_SYNC_HOR_HIGH_ACT | FB_SYNC_VERT_HIGH_ACT,
+		
+		.vmode          = FB_VMODE_NONINTERLACED,
+		.flag           = 0,
 	},
 };
 

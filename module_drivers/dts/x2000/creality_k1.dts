@@ -13,17 +13,17 @@
 	};
 
 	reserved-memory {
-		#address-cells = <1>;
-		#size-cells = <1>;
-		ranges = <>;
+    	#address-cells = <1>;
+    	#size-cells = <1>;
+    	ranges;
 
-		reserved_memory: reserved_mem@6000000{
-			compatible = "shared-dma-pool";
-			reg-64M = <0x03000000 0x1000000>;
-			reg-128M = <0x07000000 0x1000000>;
-			reg-256M = <0x0f000000 0x1000000>;
+		reserved_memory: dpu_reserved@0f000000 {
+    		compatible = "shared-dma-pool";
+    		reg = <0x0f000000 0x01000000>;
+			reg-256M = <0x0f000000 0x01000000>;    // Специфичное для Ingenic
 		};
 	};
+
 
 	display-dbi {
 		compatible = "simple-bus";
@@ -122,7 +122,7 @@
 	layer,target-pos        = <0 0>, <0 0>, <0 0>, <0 0>;                   //target pos , the start point of the target panel.
 	layer,enable            = <1 0 0 0>;                                    //layer enabled or disabled.
 	ingenic,logo-pan-layer  = <0>;                                          //on which layer should init logo pan on.
-	memory-region=<&reserved_memory>;
+	memory-region = <&reserved_memory>;
 	port {
 		dpu_out_ep: endpoint {
 			remote-endpoint = <&panel_creality_lcd_ep>;
@@ -229,7 +229,7 @@
 		compatible = "goodix,gt9xx"; /* do not modify */
 		reg = <0x14>; /* do not modify */
 		reset-gpios = <&gpa 0 GPIO_ACTIVE_LOW INGENIC_GPIO_NOBIAS>; /* RST pin */
-		irq-gpios = <&gpa 3 IRQ_TYPE_EDGE_FALLING INGENIC_GPIO_NOBIAS>; /* INT pin */
+		irq-gpios = <&gpa 3 IRQ_TYPE_EDGE_FALLING INGENIC_GPIO_PULLUP>; /* INT pin */
 		irq-flags = <2>; /* 1 rising, 2 falling */
 		goodix,driver-send-cfg = <0>;
 		touchscreen-size-x = <480>;
@@ -304,6 +304,9 @@
 	voltage-ranges = <1800 3300>;
 	
 	mmc-pwrseq = <&wifi_pwrseq>;
+
+	#address-cells = <1>;
+    #size-cells = <0>;
 
 	wifi@1 {
 		reg = <1>;
