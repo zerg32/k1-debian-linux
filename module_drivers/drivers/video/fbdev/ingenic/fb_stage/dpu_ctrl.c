@@ -2227,6 +2227,8 @@ int dpu_ctrl_init(struct dpu_ctrl *dctrl, struct lcd_panel *panel)
 		goto err_put_clk;
 	}
 
+	init_waitqueue_head(&dctrl->wq);
+
 	dctrl->irq = platform_get_irq(dctrl->pdev, 0);
 	sprintf(dctrl->irq_name, "lcdc%d", dctrl->pdev->id);
 	if (devm_request_irq(dctrl->dev, dctrl->irq, dpu_ctrl_irq_handler, 0,
@@ -2258,8 +2260,6 @@ int dpu_ctrl_init(struct dpu_ctrl *dctrl, struct lcd_panel *panel)
 			goto err_comp_desc;
 		}
 	}
-
-	init_waitqueue_head(&dctrl->wq);
 
 	dpu_ctrl_rdma_stop(dctrl, QCK_STOP);//关闭rdma
 	dpu_ctrl_comp_stop(dctrl, QCK_STOP);//关闭composer

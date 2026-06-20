@@ -75,9 +75,19 @@ EXPORT_SYMBOL(hw_composer_create);
 
 int hw_composer_destroy(struct hw_composer_ctx *ctx)
 {
+	struct mutex *lock = NULL;
+
+	if (ctx && ctx->master)
+		lock = &ctx->master->lock;
+
+	if (lock)
+		mutex_lock(lock);
 
 	list_del(&ctx->list);
 	kfree(ctx);
+
+	if (lock)
+		mutex_unlock(lock);
 
 	return 0;
 }

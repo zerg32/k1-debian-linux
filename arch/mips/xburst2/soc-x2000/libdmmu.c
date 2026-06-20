@@ -67,6 +67,7 @@ enum mem_break {
 };
 
 LIST_HEAD(handle_list);
+static DEFINE_MUTEX(handle_list_mutex);
 static unsigned long reserved_pte = 0;
 static unsigned long res_pte_paddr;
 
@@ -560,12 +561,15 @@ static struct dmmu_handle *find_handle(void)
 	struct list_head *pos, *next;
 	struct dmmu_handle *h;
 
+	mutex_lock(&handle_list_mutex);
 	list_for_each_safe(pos, next, &handle_list) {
 		h = list_entry(pos, struct dmmu_handle, list);
 		if (h->tgid == current->tgid) {
+			mutex_unlock(&handle_list_mutex);
 			return h;
 		}
 	}
+	mutex_unlock(&handle_list_mutex);
 	return NULL;
 }
 
@@ -616,8 +620,6 @@ void dmmu_mm_release(struct mmu_notifier *mn,
                      struct mm_struct *mm)
 {
 	struct dmmu_handle *h = container_of(mn, struct dmmu_handle, mn);
-
-	printk("===== dmmu release mm (TODO: not checked) ====h: %p\n", h);
 
 	if (h->handle_mm != mm) {
 		return;
@@ -677,7 +679,9 @@ static struct dmmu_handle *create_handle(void)
 
 	mmu_notifier_register(&h->mn, h->handle_mm);
 
+	mutex_lock(&handle_list_mutex);
 	list_add(&h->list, &handle_list);
+	mutex_unlock(&handle_list_mutex);
 
 	return h;
 }
@@ -931,7 +935,9 @@ int dmmu_free_all(struct device *dev)
 		}
 	}
 
+	mutex_lock(&handle_list_mutex);
 	list_del(&h->list);
+	mutex_unlock(&handle_list_mutex);
 	ClearPageReserved(virt_to_page((void *)h->pdg));
 	free_page(h->pdg);
 

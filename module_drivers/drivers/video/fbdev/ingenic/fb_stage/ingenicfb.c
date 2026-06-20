@@ -169,20 +169,10 @@ static struct ingenicfb_colormode ingenicfb_colormodes[] = {
 static int ingenicfb_dmmu_mm_release(void *data) {
     struct ingenicfb_device *fbdev = (struct ingenicfb_device *)data;
 
-    /*
-     * Fixed: Removed locking and unlocking of comp_ctx mutex.
-     * This callback (mm_release) is executed in an atomic context
-     * where sleeping/scheduling is not allowed. Taking a mutex
-     * here would cause a kernel panic or hang.
-     *
-     * Since the mm is being released, the process is likely dying,
-     * so we must stop the hardware immediately to prevent it from
-     * accessing freed memory. hw_composer_stop calls dpu_ctrl_comp_stop
-     * with QCK_STOP, which uses a busy-wait (udelay) loop, which is
-     * safe (though high latency) in atomic context.
-     */
     if (fbdev && fbdev->comp_ctx) {
+        hw_composer_lock(fbdev->comp_ctx);
         hw_composer_stop(fbdev->comp_ctx);
+        hw_composer_unlock(fbdev->comp_ctx);
     }
 
     return 0;
@@ -500,9 +490,11 @@ static int ingenicfb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long
             ret = -EFAULT;
             break;
         }
+        hw_composer_lock(fbdev->comp_ctx);
         if (dpu_ctrl_comp_stop(&fbdev->dctrl, GEN_STOP)) {
-            printk("*** comp stop fail\n");
+            dev_err(fbdev->dev, "comp stop fail in DMMU_UNMAP\n");
         }
+        hw_composer_unlock(fbdev->comp_ctx);
         return dmmu_unmap(fbdev->dev, di.addr, di.len);
         break;
     }
@@ -1090,7 +1082,6 @@ ingenicfb_read(struct fb_info *info, char __user *buf, size_t count, loff_t *ppo
 }
 
 static const struct fb_ops ingenicfb_ops = {
-static const struct fb_ops ingenicfb_ops = {
 	.owner      = THIS_MODULE,
 	.fb_open    = ingenicfb_open,
 	.fb_release     = ingenicfb_release,
@@ -1106,7 +1097,6 @@ static const struct fb_ops ingenicfb_ops = {
 	.fb_imageblit   = cfb_imageblit,
 	.fb_ioctl   = ingenicfb_ioctl,
 	.fb_mmap    = ingenicfb_mmap,
-};
 };
 
 static int vsync_skip_set(struct ingenicfb_device *fbdev, int vsync_skip) {

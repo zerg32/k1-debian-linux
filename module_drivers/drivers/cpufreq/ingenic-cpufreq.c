@@ -174,7 +174,7 @@ static int ingenic_cpufreq_target(struct cpufreq_policy *policy, unsigned int in
 	} else if (parent == PARENT_MPLL) {
 		clk_set_parent(mux, mclk);
 	} else {
-		printk("wrong clk parent\n");
+		pr_err("wrong clk parent\n");
 	}
 
 #ifdef  CONFIG_REGULATOR
@@ -198,13 +198,11 @@ static int ingenic_cpufreq_target(struct cpufreq_policy *policy, unsigned int in
 
 #ifdef  CONFIG_REGULATOR
 	if ((freq_new != clk_get_rate(clk_cpu_l2c)) || (v != regulator_get_voltage(ingenic_cpufreq->regulator))) {
-		printk("warning : ");
-		printk("from %ldKHZ to %ldKHZ(%lduV)  now: %ldKHZ(%duV)\n", freq_old / 1000, freq_new / 1000, v, clk_get_rate(clk_cpu_l2c) / 1000, regulator_get_voltage(ingenic_cpufreq->regulator));
+		pr_debug("from %ldKHZ to %ldKHZ(%lduV)  now: %ldKHZ(%duV)\n", freq_old / 1000, freq_new / 1000, v, clk_get_rate(clk_cpu_l2c) / 1000, regulator_get_voltage(ingenic_cpufreq->regulator));
 	}
 #else
 	if (freq_new != clk_get_rate(clk_cpu_l2c)) {
-		printk("warning : ");
-		printk("from %ldKHZ to %ldKHZ  now: %ldKHZ\n", freq_old / 1000, freq_new / 1000, clk_get_rate(clk_cpu_l2c) / 1000);
+		pr_debug("from %ldKHZ to %ldKHZ  now: %ldKHZ\n", freq_old / 1000, freq_new / 1000, clk_get_rate(clk_cpu_l2c) / 1000);
 	}
 #endif
 
